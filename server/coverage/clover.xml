@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1790769343990" clover="3.2.0">
+  <project timestamp="1790769343990" name="All files">
+    <metrics statements="78" coveredstatements="78" conditionals="74" coveredconditionals="73" methods="31" coveredmethods="31" elements="183" coveredelements="182" complexity="0" loc="78" ncloc="78" packages="1" files="3" classes="3"/>
+    <file name="Game.js" path="/home/hdupuy/Documents/red-tetris/server/Game.js">
+      <metrics statements="59" coveredstatements="59" conditionals="62" coveredconditionals="61" methods="22" coveredmethods="22"/>
+      <line num="10" count="1" type="stmt"/>
+      <line num="17" count="1" type="stmt"/>
+      <line num="20" count="1" type="stmt"/>
+      <line num="25" count="51" type="stmt"/>
+      <line num="26" count="51" type="stmt"/>
+      <line num="27" count="51" type="stmt"/>
+      <line num="28" count="51" type="stmt"/>
+      <line num="29" count="51" type="stmt"/>
+      <line num="30" count="51" type="stmt"/>
+      <line num="31" count="51" type="stmt"/>
+      <line num="36" count="78" type="cond" truecount="2" falsecount="0"/>
+      <line num="40" count="3" type="stmt"/>
+      <line num="44" count="65" type="cond" truecount="2" falsecount="0"/>
+      <line num="48" count="106" type="cond" truecount="2" falsecount="0"/>
+      <line num="49" count="105" type="cond" truecount="2" falsecount="0"/>
+      <line num="50" count="104" type="cond" truecount="2" falsecount="0"/>
+      <line num="51" count="1" type="stmt"/>
+      <line num="53" count="103" type="stmt"/>
+      <line num="54" count="103" type="stmt"/>
+      <line num="58" count="22" type="stmt"/>
+      <line num="59" count="10" type="stmt"/>
+      <line num="64" count="40" type="cond" truecount="2" falsecount="0"/>
+      <line num="65" count="38" type="cond" truecount="2" falsecount="0"/>
+      <line num="66" count="78" type="stmt"/>
+      <line num="67" count="37" type="stmt"/>
+      <line num="68" count="37" type="stmt"/>
+      <line num="69" count="37" type="stmt"/>
+      <line num="70" count="37" type="stmt"/>
+      <line num="71" count="37" type="stmt"/>
+      <line num="78" count="16" type="cond" truecount="2" falsecount="0"/>
+      <line num="79" count="15" type="cond" truecount="5" falsecount="0"/>
+      <line num="80" count="11" type="cond" truecount="4" falsecount="0"/>
+      <line num="81" count="9" type="stmt"/>
+      <line num="82" count="9" type="stmt"/>
+      <line num="83" count="129" type="stmt"/>
+      <line num="85" count="141" type="stmt"/>
+      <line num="90" count="6" type="stmt"/>
+      <line num="91" count="6" type="cond" truecount="5" falsecount="0"/>
+      <line num="92" count="3" type="stmt"/>
+      <line num="99" count="11" type="stmt"/>
+      <line num="100" count="11" type="cond" truecount="5" falsecount="0"/>
+      <line num="101" count="8" type="cond" truecount="5" falsecount="0"/>
+      <line num="102" count="4" type="stmt"/>
+      <line num="103" count="9" type="cond" truecount="2" falsecount="0"/>
+      <line num="104" count="4" type="cond" truecount="4" falsecount="0"/>
+      <line num="105" count="3" type="stmt"/>
+      <line num="110" count="14" type="stmt"/>
+      <line num="111" count="14" type="cond" truecount="5" falsecount="0"/>
+      <line num="112" count="11" type="stmt"/>
+      <line num="113" count="11" type="stmt"/>
+      <line num="114" count="11" type="stmt"/>
+      <line num="121" count="21" type="cond" truecount="2" falsecount="0"/>
+      <line num="122" count="32" type="stmt"/>
+      <line num="123" count="15" type="cond" truecount="2" falsecount="0"/>
+      <line num="124" count="21" type="cond" truecount="2" falsecount="0"/>
+      <line num="125" count="8" type="stmt"/>
+      <line num="126" count="8" type="cond" truecount="3" falsecount="1"/>
+      <line num="131" count="2" type="stmt"/>
+      <line num="135" count="4" type="stmt"/>
+    </file>
+    <file name="Piece.js" path="/home/hdupuy/Documents/red-tetris/server/Piece.js">
+      <metrics statements="3" coveredstatements="3" conditionals="1" coveredconditionals="1" methods="2" coveredmethods="2"/>
+      <line num="8" count="2" type="stmt"/>
+      <line num="11" count="334" type="stmt"/>
+      <line num="17" count="333" type="stmt"/>
+    </file>
+    <file name="Player.js" path="/home/hdupuy/Documents/red-tetris/server/Player.js">
+      <metrics statements="16" coveredstatements="16" conditionals="11" coveredconditionals="11" methods="7" coveredmethods="7"/>
+      <line num="6" count="2" type="stmt"/>
+      <line num="7" count="2" type="stmt"/>
+      <line num="8" count="2" type="stmt"/>
+      <line num="12" count="119" type="stmt"/>
+      <line num="13" count="119" type="stmt"/>
+      <line num="14" count="119" type="stmt"/>
+      <line num="15" count="119" type="stmt"/>
+      <line num="19" count="2010" type="stmt"/>
+      <line num="24" count="115" type="cond" truecount="3" falsecount="0"/>
+      <line num="31" count="20" type="cond" truecount="3" falsecount="0"/>
+      <line num="33" count="95" type="cond" truecount="3" falsecount="0"/>
+      <line num="34" count="20" type="cond" truecount="2" falsecount="0"/>
+      <line num="35" count="8" type="stmt"/>
+      <line num="36" count="8" type="stmt"/>
+      <line num="41" count="79" type="stmt"/>
+      <line num="42" count="79" type="stmt"/>
+    </file>
+  </project>
+</coverage>
