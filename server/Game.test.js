@@ -358,10 +358,22 @@ describe('getState', () => {
       status: STATUS.PLAYING,
       winner: null,
       players: [
-        { name: 'alice', host: true, alive: true },
-        { name: 'bob', host: false, alive: true },
+        { name: 'alice', host: true, alive: true, spectrum: Player.emptySpectrum() },
+        { name: 'bob', host: false, alive: true, spectrum: Player.emptySpectrum() },
       ],
     });
+  });
+
+  it('includes a copy of each updated player spectrum', () => {
+    const game = makeStartedGame(['alice', 'bob']);
+    const spectrum = validSpectrum();
+    game.setSpectrum('alice', spectrum);
+
+    const state = game.getState();
+    expect(state.players[0].spectrum).toEqual(spectrum);
+    expect(state.players[0].spectrum).not.toBe(game.getPlayer('alice').spectrum);
+    state.players[0].spectrum[0] = 20;
+    expect(game.getPlayer('alice').spectrum).toEqual(spectrum);
   });
 
   it('shows the winner and the players who lost', () => {

@@ -5,11 +5,13 @@
         createGame,
         tick,
         hardDrop,
+        receivePenalty,
         moveLeft,
         moveRight,
         rotate,
         softDrop,
     } from "../game/game";
+    import { getSpectrum } from "../game/spectrum";
     import BoardView from "./Board.svelte";
     import { io } from "socket.io-client";
 
@@ -101,6 +103,21 @@
             }
             serverPlaying = nextPlaying;
         });
+        client.on("penalty", (count: unknown) => {
+            if (
+                !serverPlaying ||
+                typeof count !== "number" ||
+                !Number.isInteger(count) ||
+                count < 1 ||
+                count > 3
+            ) return;
+            const previousBoard = game.board;
+            const next = receivePenalty(game, count);
+            game = next;
+            if (next.board !== previousBoard) {
+                client.emit("spectrum", getSpectrum(next.board));
+            }
+        });
         client.on("connect_error", () => {
             connectionError = "SERVER_UNAVAILABLE";
             connection = "error";
@@ -149,7 +166,13 @@
     $effect(() => {
         if (!identity || connection !== "joined" || !serverPlaying) return;
         const id = setInterval(() => {
-            game = tick(game).state;
+            const previousBoard = game.board;
+            const result = tick(game);
+            game = result.state;
+            if (result.cleared > 0) socket?.emit("lines", result.cleared);
+            if (result.state.board !== previousBoard) {
+                socket?.emit("spectrum", getSpectrum(result.state.board));
+            }
         }, TICK_MS);
         return () => clearInterval(id);
     });
@@ -170,7 +193,15 @@
                 if (!event.repeat) game = rotate(game);
                 break;
             case "Space":
-                if (!event.repeat) game = hardDrop(game).state;
+                if (!event.repeat) {
+                    const previousBoard = game.board;
+                    const result = hardDrop(game);
+                    game = result.state;
+                    if (result.cleared > 0) socket?.emit("lines", result.cleared);
+                    if (result.state.board !== previousBoard) {
+                        socket?.emit("spectrum", getSpectrum(result.state.board));
+                    }
+                }
                 break;
             default:
                 return;

@@ -136,6 +136,7 @@ export class Game {
         name: player.name,
         host: index === 0,
         alive: player.alive,
+        spectrum: [...player.spectrum],
       })),
     };
   }

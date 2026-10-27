@@ -58,6 +58,24 @@ io.on('connection', (socket) => {
     if (result.ok) io.to(room).emit('state', game.getState());
   });
 
+  socket.on('lines', (cleared) => {
+    const room = socket.data.room;
+    const game = room ? games.get(room) : null;
+    if (!game) return;
+
+    const penalty = game.reportLines(socket.id, cleared);
+    if (!penalty) return;
+    penalty.recipients.forEach((id) => io.to(id).emit('penalty', penalty.count));
+  });
+
+  socket.on('spectrum', (spectrum) => {
+    const room = socket.data.room;
+    const game = room ? games.get(room) : null;
+    if (!game) return;
+
+    if (game.setSpectrum(socket.id, spectrum)) io.to(room).emit('state', game.getState());
+  });
+
   socket.on('pieces', (payload, acknowledge) => {
     if (typeof acknowledge !== 'function') return;
 
