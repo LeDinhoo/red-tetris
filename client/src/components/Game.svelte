@@ -51,6 +51,7 @@
     let connectionError = $state("");
     let serverPlaying = $state(false);
     let serverStatus = $state<string | null>(null);
+    let winner = $state<string | null>(null);
     let isHost = $state(false);
     let roomPlayers = $state<ReadonlyArray<PlayerState>>([]);
     const opponents = $derived(
@@ -59,6 +60,7 @@
     let socket: ReturnType<typeof io> | null = null;
     let piecesRequestInFlight = $state(false);
     let round = 0;
+    let lossReportedRound = -1;
 
     $effect(() => {
         if (!identity) return;
@@ -100,12 +102,15 @@
                 Array.isArray(state) ||
                 !("status" in state) ||
                 typeof state.status !== "string" ||
+                !("winner" in state) ||
+                (state.winner !== null && typeof state.winner !== "string") ||
                 !("players" in state) ||
                 !Array.isArray(state.players) ||
                 !state.players.every(isPlayerState)
             ) return;
 
             serverStatus = state.status;
+            winner = state.winner;
             roomPlayers = state.players;
             isHost = identity !== null && roomPlayers.some(
                 (player) => player.name === identity.player && player.host,
@@ -170,6 +175,16 @@
             ) return;
             game = addPieces(game, pieces);
         });
+    });
+
+    $effect(() => {
+        if (
+            !identity || connection !== "joined" || !serverPlaying || !socket ||
+            !game.lost || lossReportedRound === round
+        ) return;
+
+        lossReportedRound = round;
+        socket.emit("lost");
     });
 
     const startGame = () => socket?.emit("start", () => {});
@@ -256,6 +271,11 @@
         >
             {serverStatus === "finished" ? "Restart" : "Start"}
         </button>
+    {/if}
+    {#if connection === "joined" && serverStatus === "finished"}
+        <p class="text-lg font-semibold" aria-live="polite">
+            {winner === null ? "Game over" : `Winner: ${winner}`}
+        </p>
     {/if}
 
     <div class="flex w-full max-w-5xl flex-wrap items-start justify-center gap-6">
