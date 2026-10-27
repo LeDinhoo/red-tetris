@@ -29,12 +29,33 @@
         }
     })();
 
+    type PlayerState = {
+        name: string;
+        host: boolean;
+        alive: boolean;
+        spectrum: ReadonlyArray<number>;
+    };
+
+    const isPlayerState = (value: unknown): value is PlayerState => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+        return "name" in value && typeof value.name === "string" &&
+            "host" in value && typeof value.host === "boolean" &&
+            "alive" in value && typeof value.alive === "boolean" &&
+            "spectrum" in value && Array.isArray(value.spectrum) &&
+            value.spectrum.length === 10 &&
+            value.spectrum.every((height) => Number.isInteger(height) && height >= 0 && height <= 20);
+    };
+
     type ConnectionState = "joining" | "joined" | "error" | "disconnected";
     let connection = $state<ConnectionState>(identity ? "joining" : "disconnected");
     let connectionError = $state("");
     let serverPlaying = $state(false);
     let serverStatus = $state<string | null>(null);
     let isHost = $state(false);
+    let roomPlayers = $state<ReadonlyArray<PlayerState>>([]);
+    const opponents = $derived(
+        identity ? roomPlayers.filter((player) => player.name !== identity.player) : [],
+    );
     let socket: ReturnType<typeof io> | null = null;
     let piecesRequestInFlight = $state(false);
     let round = 0;
@@ -78,21 +99,17 @@
                 typeof state !== "object" ||
                 Array.isArray(state) ||
                 !("status" in state) ||
-                typeof state.status !== "string"
+                typeof state.status !== "string" ||
+                !("players" in state) ||
+                !Array.isArray(state.players) ||
+                !state.players.every(isPlayerState)
             ) return;
 
             serverStatus = state.status;
-            isHost = identity !== null &&
-                "players" in state &&
-                Array.isArray(state.players) &&
-                state.players.some((player) =>
-                    player !== null &&
-                    typeof player === "object" &&
-                    "name" in player &&
-                    player.name === identity.player &&
-                    "host" in player &&
-                    player.host === true
-                );
+            roomPlayers = state.players;
+            isHost = identity !== null && roomPlayers.some(
+                (player) => player.name === identity.player && player.host,
+            );
 
             const nextPlaying = state.status === "playing";
             if (nextPlaying && !serverPlaying) {
@@ -241,14 +258,39 @@
         </button>
     {/if}
 
-    <div class="relative">
-        <BoardView board={visibleBoard} />
-        {#if game.lost}
-            <div
-                class="absolute inset-0 flex items-center justify-center bg-black/70 text-2xl font-bold"
-            >
-                Game over
-            </div>
+    <div class="flex w-full max-w-5xl flex-wrap items-start justify-center gap-6">
+        <div class="relative shrink-0">
+            <BoardView board={visibleBoard} />
+            {#if game.lost}
+                <div
+                    class="absolute inset-0 flex items-center justify-center bg-black/70 text-2xl font-bold"
+                >
+                    Game over
+                </div>
+            {/if}
+        </div>
+        {#if opponents.length > 0}
+            <aside class="flex max-w-full flex-wrap justify-center gap-3" aria-label="Opponents">
+                {#each opponents as opponent (opponent.name)}
+                    <section class="rounded border border-zinc-700 bg-zinc-900 p-3">
+                        <h2 class="mb-2 max-w-40 truncate text-sm font-semibold">{opponent.name}</h2>
+                        <div
+                            class="grid h-40 w-40 grid-cols-10 gap-1"
+                            role="img"
+                            aria-label={`${opponent.name} spectrum`}
+                        >
+                            {#each opponent.spectrum as height, index (index)}
+                                <div class="flex h-full items-end bg-zinc-950" aria-hidden="true">
+                                    <div
+                                        class="w-full bg-red-500"
+                                        style={`height: ${(height / 20) * 100}%`}
+                                    ></div>
+                                </div>
+                            {/each}
+                        </div>
+                    </section>
+                {/each}
+            </aside>
         {/if}
     </div>
 
