@@ -1,12 +1,23 @@
 import express from 'express';
 import { createServer } from 'node:http';
+import { dirname, resolve } from 'node:path';
 import { Server } from 'socket.io';
+import { fileURLToPath } from 'node:url';
 import { Game } from '../Game.js';
 import { Player } from '../Player.js';
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
+const clientDist = resolve(dirname(fileURLToPath(import.meta.url)), '../../client/dist');
+
+app.use(express.static(clientDist));
+app.get(/^\/(?!socket\.io(?:\/|$))[^/]+\/[^/]+\/?$/, (req, res) => {
+  if (req.path.startsWith('/assets/') || !req.get('accept')?.includes('text/html')) {
+    return res.sendStatus(404);
+  }
+  res.sendFile(resolve(clientDist, 'index.html'));
+});
 
 export const games = new Map();
 
