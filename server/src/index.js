@@ -46,6 +46,26 @@ io.on('connection', (socket) => {
     io.to(room).emit('state', state);
   });
 
+  socket.on('start', (acknowledge) => {
+    if (typeof acknowledge !== 'function') return;
+
+    const room = socket.data.room;
+    const game = room ? games.get(room) : null;
+    if (!game) return acknowledge({ ok: false, error: 'NOT_JOINED' });
+
+    const result = game.start(socket.id);
+    acknowledge(result);
+    if (result.ok) io.to(room).emit('state', game.getState());
+  });
+
+  socket.on('pieces', (payload, acknowledge) => {
+    if (typeof acknowledge !== 'function') return;
+
+    const room = socket.data.room;
+    const game = room ? games.get(room) : null;
+    acknowledge(game ? game.getPieces(payload?.from, payload?.count) : []);
+  });
+
   socket.on('disconnect', () => {
     const room = socket.data.room;
     if (!room) return;

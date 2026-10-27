@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { PIECE_TYPES } from "../game/pieces";
     import { mergePiece } from "../game/operations";
     import {
+        addPieces,
         createGame,
         tick,
         hardDrop,
@@ -30,16 +30,23 @@
     type ConnectionState = "joining" | "joined" | "error" | "disconnected";
     let connection = $state<ConnectionState>(identity ? "joining" : "disconnected");
     let connectionError = $state("");
+    let serverPlaying = $state(false);
+    let serverStatus = $state<string | null>(null);
+    let isHost = $state(false);
+    let socket: ReturnType<typeof io> | null = null;
+    let piecesRequestInFlight = $state(false);
+    let round = 0;
 
     $effect(() => {
         if (!identity) return;
-        const socket = io(window.location.origin, {
+        const client = io(window.location.origin, {
             autoConnect: false,
             reconnection: false,
         });
+        socket = client;
 
-        socket.on("connect", () => {
-            socket.emit(
+        client.on("connect", () => {
+            client.emit(
                 "join",
                 { room: identity.room, name: identity.player },
                 (result: unknown) => {
@@ -63,30 +70,75 @@
                 },
             );
         });
-        socket.on("connect_error", () => {
+        client.on("state", (state: unknown) => {
+            if (
+                !state ||
+                typeof state !== "object" ||
+                Array.isArray(state) ||
+                !("status" in state) ||
+                typeof state.status !== "string"
+            ) return;
+
+            serverStatus = state.status;
+            isHost = identity !== null &&
+                "players" in state &&
+                Array.isArray(state.players) &&
+                state.players.some((player) =>
+                    player !== null &&
+                    typeof player === "object" &&
+                    "name" in player &&
+                    player.name === identity.player &&
+                    "host" in player &&
+                    player.host === true
+                );
+
+            const nextPlaying = state.status === "playing";
+            if (nextPlaying && !serverPlaying) {
+                round += 1;
+                serverPlaying = true;
+                game = createGame();
+                return;
+            }
+            serverPlaying = nextPlaying;
+        });
+        client.on("connect_error", () => {
             connectionError = "SERVER_UNAVAILABLE";
             connection = "error";
         });
-        socket.on("disconnect", () => {
+        client.on("disconnect", () => {
             connectionError = "DISCONNECTED";
             connection = "disconnected";
         });
-        socket.connect();
-        return () => socket.disconnect();
+        client.connect();
+        return () => {
+            client.disconnect();
+            if (socket === client) socket = null;
+        };
     });
 
-    // Solo mode only: the sequence of pieces is generated locally.
-    // In multiplayer, it will come from the server (see addPieces in game.ts).
-    const SEQUENCE_LENGTH = 1000;
-
-    const randomPieces = (): number[] =>
-        Array.from(
-            { length: SEQUENCE_LENGTH },
-            () => PIECE_TYPES[Math.floor(Math.random() * PIECE_TYPES.length)],
-        );
-
     // The state is never mutated, only replaced: $state.raw is enough (no deep proxy).
-    let game = $state.raw(createGame(randomPieces()));
+    let game = $state.raw(createGame());
+
+    $effect(() => {
+        if (
+            !identity || connection !== "joined" || !serverPlaying || !socket ||
+            piecesRequestInFlight || game.pieces.length - game.nextIndex > 10
+        ) return;
+
+        const client = socket;
+        const requestRound = round;
+        piecesRequestInFlight = true;
+        client.emit("pieces", { from: game.pieces.length, count: 50 }, (pieces: unknown) => {
+            piecesRequestInFlight = false;
+            if (
+                requestRound !== round || !serverPlaying ||
+                !Array.isArray(pieces) || pieces.length === 0
+            ) return;
+            game = addPieces(game, pieces);
+        });
+    });
+
+    const startGame = () => socket?.emit("start", () => {});
 
     // The current piece is drawn by merging it into a copy of the board, for display only.
     const visibleBoard = $derived(
@@ -95,7 +147,7 @@
 
     // Gravity. `game` is only read inside the callback, so this effect runs once.
     $effect(() => {
-        if (!identity || connection !== "joined") return;
+        if (!identity || connection !== "joined" || !serverPlaying) return;
         const id = setInterval(() => {
             game = tick(game).state;
         }, TICK_MS);
@@ -103,7 +155,7 @@
     });
 
     const handleKeydown = (event: KeyboardEvent) => {
-        if (!identity || connection !== "joined") return;
+        if (!identity || connection !== "joined" || !serverPlaying) return;
         switch (event.code) {
             case "ArrowLeft":
                 game = moveLeft(game);
@@ -127,10 +179,6 @@
         event.preventDefault();
     };
 
-    const restart = () => {
-        if (connection !== "joined") return;
-        game = createGame(randomPieces());
-    };
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -153,6 +201,15 @@
         <p class="text-sm text-red-400" role="alert">Connection: {connectionError}</p>
     {/if}
 
+    {#if connection === "joined" && isHost && serverStatus !== "playing"}
+        <button
+            class="rounded bg-red-600 px-4 py-2 font-semibold hover:bg-red-500"
+            onclick={startGame}
+        >
+            {serverStatus === "finished" ? "Restart" : "Start"}
+        </button>
+    {/if}
+
     <div class="relative">
         <BoardView board={visibleBoard} />
         {#if game.lost}
@@ -163,14 +220,6 @@
             </div>
         {/if}
     </div>
-
-    <button
-        class="rounded bg-red-600 px-4 py-2 font-semibold hover:bg-red-500"
-        onmousedown={(event) => event.preventDefault()}
-        onclick={restart}
-    >
-        Restart
-    </button>
 
     <p class="text-sm text-zinc-400">
         ← → move · ↑ rotate · ↓ soft drop · Space hard drop
