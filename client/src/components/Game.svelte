@@ -11,9 +11,69 @@
         softDrop,
     } from "../game/game";
     import BoardView from "./Board.svelte";
+    import { io } from "socket.io-client";
 
     // Constant falling speed, as required by the subject
     const TICK_MS = 800;
+
+    const identity = (() => {
+        const match = /^\/([^/]+)\/([^/]+)$/.exec(window.location.pathname);
+        if (!match) return null;
+        try {
+            const [room, player] = match.slice(1).map(decodeURIComponent);
+            return room && player ? { room, player } : null;
+        } catch {
+            return null;
+        }
+    })();
+
+    type ConnectionState = "joining" | "joined" | "error" | "disconnected";
+    let connection = $state<ConnectionState>(identity ? "joining" : "disconnected");
+    let connectionError = $state("");
+
+    $effect(() => {
+        if (!identity) return;
+        const socket = io(window.location.origin, {
+            autoConnect: false,
+            reconnection: false,
+        });
+
+        socket.on("connect", () => {
+            socket.emit(
+                "join",
+                { room: identity.room, name: identity.player },
+                (result: unknown) => {
+                if (
+                    result &&
+                    typeof result === "object" &&
+                    "ok" in result &&
+                    result.ok === true
+                ) {
+                    connection = "joined";
+                    return;
+                }
+                connectionError =
+                    result &&
+                    typeof result === "object" &&
+                    "error" in result &&
+                    typeof result.error === "string"
+                        ? result.error
+                        : "JOIN_FAILED";
+                connection = "error";
+                },
+            );
+        });
+        socket.on("connect_error", () => {
+            connectionError = "SERVER_UNAVAILABLE";
+            connection = "error";
+        });
+        socket.on("disconnect", () => {
+            connectionError = "DISCONNECTED";
+            connection = "disconnected";
+        });
+        socket.connect();
+        return () => socket.disconnect();
+    });
 
     // Solo mode only: the sequence of pieces is generated locally.
     // In multiplayer, it will come from the server (see addPieces in game.ts).
@@ -35,6 +95,7 @@
 
     // Gravity. `game` is only read inside the callback, so this effect runs once.
     $effect(() => {
+        if (!identity || connection !== "joined") return;
         const id = setInterval(() => {
             game = tick(game).state;
         }, TICK_MS);
@@ -42,6 +103,7 @@
     });
 
     const handleKeydown = (event: KeyboardEvent) => {
+        if (!identity || connection !== "joined") return;
         switch (event.code) {
             case "ArrowLeft":
                 game = moveLeft(game);
@@ -66,16 +128,30 @@
     };
 
     const restart = () => {
+        if (connection !== "joined") return;
         game = createGame(randomPieces());
     };
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
+{#if !identity}
+    <main
+        class="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 p-4 text-zinc-100"
+    >
+        <h1 class="text-2xl font-bold">Invalid game URL</h1>
+        <p class="text-sm text-zinc-400">Use /room/player to start a game.</p>
+    </main>
+{:else}
 <main
     class="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950 p-4 text-zinc-100"
 >
     <h1 class="text-2xl font-bold">Red Tetris</h1>
+    {#if connection === "joining"}
+        <p class="text-sm text-zinc-400">Joining game…</p>
+    {:else if connection === "error" || connection === "disconnected"}
+        <p class="text-sm text-red-400" role="alert">Connection: {connectionError}</p>
+    {/if}
 
     <div class="relative">
         <BoardView board={visibleBoard} />
@@ -100,3 +176,4 @@
         ← → move · ↑ rotate · ↓ soft drop · Space hard drop
     </p>
 </main>
+{/if}
