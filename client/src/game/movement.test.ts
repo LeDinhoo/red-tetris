@@ -13,7 +13,6 @@ import { I, O, T } from './pieces';
 
 const BLOCK = 1;
 
-// Builds an empty board with a filled cell at each given [x, y].
 const boardWith = (blocks: ReadonlyArray<readonly [number, number]>): Board =>
   createBoard().map((row, y) =>
     row.map((cell, x) => (blocks.some(([bx, by]) => bx === x && by === y) ? BLOCK : cell)),
@@ -21,7 +20,6 @@ const boardWith = (blocks: ReadonlyArray<readonly [number, number]>): Board =>
 
 const empty = createBoard();
 
-// O piece occupies (x, y), (x+1, y), (x, y+1), (x+1, y+1)
 const oAt = (x: number, y: number): Piece => ({ type: O, rotation: 0, x, y });
 
 describe('isValidPosition', () => {
@@ -170,7 +168,6 @@ describe('rotate', () => {
   });
 
   it('refuses the rotation when it would cross a wall', () => {
-    // Vertical I at x = -2 has its cells in column 0. Next rotation would reach x = -2.
     const piece: Piece = { type: I, rotation: 1, x: -2, y: 0 };
     expect(isValidPosition(empty, piece)).toBe(true);
     expect(rotate(empty, piece)).toBe(piece);
@@ -196,7 +193,6 @@ describe('hardDrop', () => {
   });
 
   it('takes the piece shape into account', () => {
-    // Vertical I has 4 cells in height, so it stops at y = BOARD_HEIGHT - 4.
     const piece: Piece = { type: I, rotation: 1, x: 0, y: 0 };
     expect(hardDrop(empty, piece).y).toBe(BOARD_HEIGHT - 4);
   });

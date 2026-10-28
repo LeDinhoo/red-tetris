@@ -5,7 +5,6 @@ import { EMPTY, PENALTY, I, O, T } from './pieces';
 
 type Filled = readonly [x: number, y: number, value: number];
 
-// Builds an empty board with the given cells filled.
 const boardWith = (filled: ReadonlyArray<Filled>): Board =>
   createBoard().map((row, y) =>
     row.map((cell, x) => {
@@ -14,11 +13,9 @@ const boardWith = (filled: ReadonlyArray<Filled>): Board =>
     }),
   );
 
-// The cells of a whole row filled with one value.
 const rowCells = (y: number, value: number): Filled[] =>
   Array.from({ length: BOARD_WIDTH }, (_, x): Filled => [x, y, value]);
 
-// A row made of one value.
 const rowOf = (value: number): number[] => Array.from({ length: BOARD_WIDTH }, () => value);
 
 const countFilled = (board: Board): number =>

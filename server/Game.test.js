@@ -2,20 +2,17 @@ import { describe, it, expect } from 'vitest';
 import { Game, STATUS, MAX_BATCH, MAX_SEQUENCE } from './Game.js';
 import { Player } from './Player.js';
 
-// A predictable generator: the piece types come out as 1, 2, 3, 4, 5, 6, 7, 1, 2, ...
 const makeRng = () => {
   let i = 0;
   return () => ((i++ % 7) + 0.5) / 7;
 };
 
-// Creates a game with one player per name. The id of each player is its name.
 const makeGame = (names = ['alice', 'bob']) => {
   const game = new Game('room', makeRng());
   names.forEach((name) => game.addPlayer(new Player(name, name)));
   return game;
 };
 
-// Creates a game and starts it (as the first player, who is the host).
 const makeStartedGame = (names) => {
   const game = makeGame(names);
   game.start(game.host.id);

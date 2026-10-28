@@ -15,7 +15,6 @@
     import BoardView from "./Board.svelte";
     import { io } from "socket.io-client";
 
-    // Constant falling speed, as required by the subject
     const TICK_MS = 800;
 
     const identity = (() => {
@@ -155,7 +154,6 @@
         };
     });
 
-    // The state is never mutated, only replaced: $state.raw is enough (no deep proxy).
     let game = $state.raw(createGame());
 
     $effect(() => {
@@ -189,12 +187,10 @@
 
     const startGame = () => socket?.emit("start", () => {});
 
-    // The current piece is drawn by merging it into a copy of the board, for display only.
     const visibleBoard = $derived(
         game.piece ? mergePiece(game.board, game.piece) : game.board,
     );
 
-    // Gravity. `game` is only read inside the callback, so this effect runs once.
     $effect(() => {
         if (!identity || connection !== "joined" || !serverPlaying) return;
         const id = setInterval(() => {
@@ -238,7 +234,6 @@
             default:
                 return;
         }
-        // Avoid scrolling the page with the arrows and the space bar
         event.preventDefault();
     };
 

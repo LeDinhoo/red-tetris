@@ -5,7 +5,6 @@ import { getSpectrum } from './spectrum';
 
 type Filled = readonly [x: number, y: number, value: number];
 
-// Builds an empty board with the given cells filled.
 const boardWith = (filled: ReadonlyArray<Filled>): Board =>
   createBoard().map((row, y) =>
     row.map((cell, x) => {

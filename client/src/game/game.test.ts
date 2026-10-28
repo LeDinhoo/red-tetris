@@ -16,7 +16,6 @@ import { EMPTY, PENALTY, O, T } from './pieces';
 
 type Filled = readonly [x: number, y: number, value: number];
 
-// Builds an empty board with the given cells filled.
 const boardWith = (filled: ReadonlyArray<Filled>): Board =>
   createBoard().map((row, y) =>
     row.map((cell, x) => {
@@ -30,20 +29,16 @@ const countFilled = (board: Board): number =>
 
 const rowOf = (value: number): number[] => Array.from({ length: BOARD_WIDTH }, () => value);
 
-// Applies `step` n times.
 const repeat = (n: number, step: (state: GameState) => GameState, state: GameState): GameState =>
   Array.from({ length: n }).reduce<GameState>((current) => step(current), state);
 
 const repeatTick = (n: number, state: GameState): GameState =>
   repeat(n, (current) => tick(current).state, state);
 
-// Row index of the floor for a 2-row-high piece such as O
 const FLOOR_Y = BOARD_HEIGHT - 2;
 
-// A game that is lost
 const lostState = (): GameState => ({ ...createGame([O]), piece: null, lost: true });
 
-// A game waiting for pieces: the sequence is exhausted and nobody is playing
 const waitingState = (): GameState => createGame();
 
 describe('createGame', () => {
@@ -163,7 +158,6 @@ describe('hardDrop', () => {
     const state: GameState = { ...createGame([O, T]), board: boardWith(almostFull) };
     const result = hardDrop(state);
     expect(result.cleared).toBe(1);
-    // The upper half of the O is now on the bottom row
     expect(result.state.board[BOARD_HEIGHT - 1][4]).toBe(O);
     expect(result.state.board[BOARD_HEIGHT - 1][5]).toBe(O);
     expect(countFilled(result.state.board)).toBe(2);
