@@ -8,7 +8,7 @@ import { Player } from '../Player.js';
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+export const io = new Server(server);
 const clientDist = resolve(dirname(fileURLToPath(import.meta.url)), '../../client/dist');
 
 app.use(express.static(clientDist));

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "coverage": "vitest run --coverage",
+    "coverage": "vitest run --coverage --coverage.include=\"*.js\" --coverage.include=\"src/**/*.js\" --coverage.exclude=\"**/*.test.js\" --coverage.exclude=\"**/*.spec.js\" --coverage.exclude=\"**/node_modules/**\" --coverage.exclude=\"**/coverage/**\"",
     "start": "node src/index.js",
     "dev": "node --watch src/index.js"
   },
